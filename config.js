@@ -6,7 +6,7 @@
 // ID de 12 caracteres que da DataPipe (pipe.jspsych.org) al crear el experimento.
 // Mientras quede vacío, el experimento corre en "modo prueba": no guarda en OSF
 // y al final ofrece descargar los datos en un archivo CSV.
-const DATAPIPE_ID = "";
+const DATAPIPE_ID = "goC12oxVwkzh";
 
 // Segundos de espera para ver una verificación, por condición.
 // Con DataPipe, la condición se asigna de forma balanceada (configurar 2 condiciones en DataPipe).
