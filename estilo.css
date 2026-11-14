@@ -1,0 +1,70 @@
+:root {
+  --salvia: #DAE6CC;
+  --crema: #F3F6EC;
+  --oliva: #333D25;
+  --oliva-suave: #4E5A3F;
+  --mostaza: #EEAB41;
+  --verde: #2E6B2E;
+  --rojo: #A32D2D;
+}
+html, body { background: var(--salvia) !important; }
+body {
+  font-family: "Helvetica Neue", Arial, sans-serif;
+  color: var(--oliva);
+}
+.jspsych-display-element { font-size: 18px; }
+.jspsych-content-wrapper { padding: 16px; }
+.jspsych-content {
+  max-width: 720px;
+  width: 100%;
+  background: var(--crema);
+  border-radius: 18px;
+  padding: 28px 24px;
+  box-sizing: border-box;
+  text-align: left;
+  line-height: 1.5;
+}
+.jspsych-content p, .jspsych-content li { color: var(--oliva); }
+.titular {
+  border: 1px solid #C9D6B9;
+  background: #fff;
+  border-radius: 14px;
+  padding: 20px;
+  font-size: 1.25em;
+  font-weight: 700;
+  line-height: 1.35;
+  margin: 8px 0 20px;
+}
+.pregunta { font-weight: 600; margin: 8px 0 12px; }
+.costo { color: #7A5410; font-weight: 700; }
+.jspsych-btn {
+  background: var(--oliva);
+  color: var(--crema);
+  border: none;
+  border-radius: 10px;
+  padding: 12px 22px;
+  font-size: 16px;
+  margin: 6px;
+  cursor: pointer;
+}
+.jspsych-btn:hover { background: var(--oliva-suave); color: #fff; }
+.jspsych-btn.secundario { background: #fff; color: var(--oliva); border: 1.5px solid var(--oliva); }
+.escala #jspsych-html-button-response-btngroup { display: grid !important; grid-template-columns: repeat(7, 1fr) !important; gap: 6px; width: 100% !important; max-width: none !important; }
+
+.escala .jspsych-btn { margin: 0; padding: 12px 0; width: 100%; }
+.extremos { display: flex; justify-content: space-between; font-size: 14px; color: var(--oliva-suave); margin-top: 6px; }
+.espera { text-align: center; padding: 20px 0; }
+.reloj { font-size: 64px; font-weight: 700; font-variant-numeric: tabular-nums; margin: 10px 0; }
+.barra { height: 8px; background: #C9D6B9; border-radius: 4px; overflow: hidden; }
+.barra > div { height: 8px; background: var(--oliva); width: 0%; transition: width 0.25s linear; }
+.veredicto { font-size: 1.3em; font-weight: 800; }
+.veredicto.v { color: var(--verde); }
+.veredicto.f { color: var(--rojo); }
+.nota { color: #6b7360; font-size: 14px; }
+.jspsych-survey-multi-choice-question, .jspsych-survey-multi-select-question, .jspsych-survey-text label { text-align: left; }
+input[type=number], input[type=text] { font-size: 16px; padding: 6px 8px; border-radius: 6px; border: 1px solid #9DB383; }
+@media (max-width: 520px) {
+  .jspsych-display-element { font-size: 16px; }
+  .reloj { font-size: 52px; }
+  .escala .jspsych-btn { font-size: 15px; }
+}
