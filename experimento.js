@@ -14,6 +14,7 @@ const jsPsych = initJsPsych({
 const PARTICIPANTE = jsPsych.randomization.randomID(10);
 let COSTO = null; // se asigna al inicio
 
+const ESCALA = ["Seguro/a de que es falsa", "Probablemente falsa", "No sé", "Probablemente verdadera", "Seguro/a de que es verdadera"];
 const titularHTML = (t) => `<div class="titular">${t.texto}</div>`;
 const respuestaAnterior = () => jsPsych.data.get().last(1).values()[0];
 
@@ -80,12 +81,12 @@ const instrucciones = {
     <h2>Cómo funciona</h2>
     <p>Vas a ver <b>8 titulares de noticias</b>, de a uno. Para cada titular:</p>
     <ol>
-      <li>Indicás si creés que es verdadera o falsa, en una escala de 1 (seguro que es falsa) a 7 (seguro que es verdadera).</li>
+      <li>Indicás si creés que es verdadera o falsa, desde «Seguro/a de que es falsa» hasta «Seguro/a de que es verdadera».</li>
       <li>Elegís si querés ver una <b>verificación</b> que te dice si es verdadero o falso.
           <span class="costo">Ver la verificación demora ${COSTO} segundos.</span></li>
     </ol>
     <p>Al final te mostramos cuántos titulares acertaste: cuenta como acierto si verificaste,
-    o si no verificaste pero te inclinaste hacia la respuesta correcta (1 a 3 si era falsa, 5 a 7 si era verdadera).</p>
+    o si no verificaste pero te inclinaste hacia la respuesta correcta («probablemente» o «seguro/a»). «No sé» no suma.</p>
     <p>Primero hay un titular de práctica.</p>`,
   choices: ["Empezar la práctica"],
   data: { fase: "instrucciones" },
@@ -100,11 +101,10 @@ function secuenciaTitular(t, fase) {
   const credibilidad = {
     type: jsPsychHtmlButtonResponse,
     stimulus: `${titularHTML(t)}<p class="pregunta">¿Creés que esta noticia es verdadera o falsa?</p>`,
-    choices: ["1", "2", "3", "4", "5", "6", "7"],
-    prompt: `<div class="extremos"><span>1 = Seguro que<br>es falsa</span><span style="text-align:center">4 = No sé</span><span style="text-align:right">7 = Seguro que<br>es verdadera</span></div>`,
-    css_classes: ["escala"],
+    choices: ESCALA,
+    css_classes: ["escala5"],
     data: { ...base, paso: "credibilidad" },
-    on_finish: (d) => { d.credibilidad = d.response + 1; },
+    on_finish: (d) => { d.credibilidad = d.response + 1; d.credibilidad_texto = ESCALA[d.response]; },
   };
 
   const decision = {
@@ -170,7 +170,7 @@ function secuenciaTitular(t, fase) {
       type: jsPsychCallFunction,
       func: () => {
         const c = jsPsych.data.get().filter({ titular: t.id, paso: "credibilidad", fase }).last(1).values()[0].credibilidad;
-        const inclinacion = c >= 5 ? "verdadera" : c <= 3 ? "falsa" : "no_sabe";
+        const inclinacion = c >= 4 ? "verdadera" : c <= 2 ? "falsa" : "no_sabe";
         return { inclinacion, acierto: inclinacion === (t.verdadero ? "verdadera" : "falsa") };
       },
       data: { ...base, paso: "juicio", verifico: false },

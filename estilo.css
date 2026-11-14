@@ -68,3 +68,6 @@ input[type=number], input[type=text] { font-size: 16px; padding: 6px 8px; border
   .reloj { font-size: 52px; }
   .escala .jspsych-btn { font-size: 15px; }
 }
+.escala5 #jspsych-html-button-response-btngroup { display: grid !important; grid-template-columns: 1fr !important; gap: 8px; width: 100% !important; max-width: none !important; }
+.escala5 .jspsych-btn { margin: 0; width: 100%; text-align: left; padding: 13px 16px; }
+.escala5 .jspsych-btn:nth-child(3) { background: #fff; color: var(--oliva); border: 1.5px solid var(--oliva); text-align: center; }
