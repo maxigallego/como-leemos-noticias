@@ -28,7 +28,7 @@ const consentimiento = {
     Vas a ver algunos titulares de noticias y responder preguntas breves.
     Dura unos 10 minutos, es anónimo y podés dejarlo cuando quieras.</p>
     <p>Algunos titulares son reales y otros no; al final te contamos cuáles.</p>
-    <p class="nota">Equipo: Maximiliano Gallego, Luciana Loria y Pedro Pepe. Contacto: ${CONTACTO}</p>`,
+    <p class="nota">Contacto: ${CONTACTO}</p>`,
   questions: [
     { prompt: "¿Tenés 18 años o más?", name: "mayor_edad", options: ["Sí", "No"], required: true, horizontal: true },
     { prompt: "¿Aceptás participar?", name: "acepta", options: ["Sí, acepto", "No acepto"], required: true, horizontal: true },
@@ -80,12 +80,12 @@ const instrucciones = {
     <h2>Cómo funciona</h2>
     <p>Vas a ver <b>8 titulares de noticias</b>, de a uno. Para cada titular:</p>
     <ol>
-      <li>Indicás qué tan creíble te parece.</li>
+      <li>Indicás si creés que es verdadera o falsa, en una escala de 1 (seguro que es falsa) a 7 (seguro que es verdadera).</li>
       <li>Elegís si querés ver una <b>verificación</b> que te dice si es verdadero o falso.
           <span class="costo">Ver la verificación demora ${COSTO} segundos.</span></li>
-      <li>Decís si creés que la noticia es verdadera o falsa.</li>
     </ol>
-    <p>Al final te mostramos cuántos titulares acertaste.</p>
+    <p>Al final te mostramos cuántos titulares acertaste: cuenta como acierto si verificaste,
+    o si no verificaste pero te inclinaste hacia la respuesta correcta (1 a 3 si era falsa, 5 a 7 si era verdadera).</p>
     <p>Primero hay un titular de práctica.</p>`,
   choices: ["Empezar la práctica"],
   data: { fase: "instrucciones" },
@@ -99,9 +99,9 @@ function secuenciaTitular(t, fase) {
 
   const credibilidad = {
     type: jsPsychHtmlButtonResponse,
-    stimulus: `${titularHTML(t)}<p class="pregunta">¿Qué tan creíble te parece este titular?</p>`,
+    stimulus: `${titularHTML(t)}<p class="pregunta">¿Creés que esta noticia es verdadera o falsa?</p>`,
     choices: ["1", "2", "3", "4", "5", "6", "7"],
-    prompt: `<div class="extremos"><span>1 = Nada creíble</span><span>7 = Totalmente creíble</span></div>`,
+    prompt: `<div class="extremos"><span>1 = Seguro que<br>es falsa</span><span style="text-align:center">4 = No sé</span><span style="text-align:right">7 = Seguro que<br>es verdadera</span></div>`,
     css_classes: ["escala"],
     data: { ...base, paso: "credibilidad" },
     on_finish: (d) => { d.credibilidad = d.response + 1; },
@@ -148,26 +148,38 @@ function secuenciaTitular(t, fase) {
     conditional_function: () => jsPsych.data.get().filter({ titular: t.id, paso: "decision", fase }).last(1).values()[0].verifico,
   };
 
-  const juicio = {
-    type: jsPsychHtmlButtonResponse,
-    stimulus: () => {
-      const verifico = jsPsych.data.get().filter({ titular: t.id, paso: "decision", fase }).last(1).values()[0].verifico;
-      const veredicto = verifico
-        ? `<p class="veredicto ${t.verdadero ? "v" : "f"}">Verificación: ${t.verdadero ? "VERDADERO" : "FALSO"}</p>
-           <p>${t.contexto}</p><p class="nota">Verificación del equipo de investigación.</p><hr>`
-        : "";
-      return `${titularHTML(t)}${veredicto}<p class="pregunta">¿Creés que esta noticia es verdadera o falsa?</p>`;
-    },
-    choices: ["Verdadera", "Falsa"],
-    data: { ...base, paso: "juicio" },
-    on_finish: (d) => {
-      d.juicio_verdadera = d.response === 0;
-      d.acierto = d.juicio_verdadera === t.verdadero;
-      d.verifico = jsPsych.data.get().filter({ titular: t.id, paso: "decision", fase }).last(1).values()[0].verifico;
-    },
+  const verifico = () => jsPsych.data.get().filter({ titular: t.id, paso: "decision", fase }).last(1).values()[0].verifico;
+
+  // Si verificó: ve el veredicto y sigue. Cuenta como acierto (pagó el costo de saberlo).
+  const veredicto = {
+    timeline: [{
+      type: jsPsychHtmlButtonResponse,
+      stimulus: `${titularHTML(t)}
+        <p class="veredicto ${t.verdadero ? "v" : "f"}">Verificación: ${t.verdadero ? "VERDADERO" : "FALSO"}</p>
+        <p>${t.contexto}</p><p class="nota">Verificación del equipo de investigación.</p>`,
+      choices: ["Siguiente"],
+      data: { ...base, paso: "juicio", verifico: true },
+      on_finish: (d) => { d.juicio_verdadera = t.verdadero; d.acierto = true; },
+    }],
+    conditional_function: () => verifico(),
   };
 
-  return { timeline: [credibilidad, decision, esperaCondicional, juicio] };
+  // Si no verificó: el juicio es el de la escala (1-3 = falsa, 5-7 = verdadera, 4 = no sabe). Sin pantalla.
+  const juicio = {
+    timeline: [{
+      type: jsPsychCallFunction,
+      func: () => {
+        const c = jsPsych.data.get().filter({ titular: t.id, paso: "credibilidad", fase }).last(1).values()[0].credibilidad;
+        const inclinacion = c >= 5 ? "verdadera" : c <= 3 ? "falsa" : "no_sabe";
+        return { inclinacion, acierto: inclinacion === (t.verdadero ? "verdadera" : "falsa") };
+      },
+      data: { ...base, paso: "juicio", verifico: false },
+      on_finish: (d) => { d.inclinacion = d.value.inclinacion; d.acierto = d.value.acierto; },
+    }],
+    conditional_function: () => !verifico(),
+  };
+
+  return { timeline: [credibilidad, decision, esperaCondicional, veredicto, juicio] };
 }
 
 // ---------------------------------------------------------------------
@@ -249,18 +261,6 @@ const postTarea = {
 // ---------------------------------------------------------------------
 // Bloque 4. Perfil
 // ---------------------------------------------------------------------
-const crt = {
-  type: jsPsychSurveyText,
-  preamble: "<p class='pregunta'>Respondé estas cuatro preguntas breves.</p>",
-  questions: [
-    { prompt: "Si estás corriendo una carrera y pasás a la persona que va segunda, ¿en qué puesto quedás?", name: "crt1", required: true },
-    { prompt: "Un granjero tenía 15 ovejas y murieron todas menos 8. ¿Cuántas le quedan?", name: "crt2", required: true },
-    { prompt: "El padre de Emilia tiene tres hijas. Las dos primeras se llaman Abril y Mayo. ¿Cómo se llama la tercera?", name: "crt3", required: true },
-    { prompt: "¿Cuántos metros cúbicos de tierra hay en un pozo de 3 m de profundidad, 3 m de ancho y 3 m de largo?", name: "crt4", required: true },
-  ],
-  button_label: "Continuar",
-  data: { fase: "perfil", paso: "crt" },
-};
 const edad = {
   type: jsPsychSurveyHtmlForm,
   html: `<p class="pregunta">¿Qué edad tenés?</p>
@@ -348,7 +348,6 @@ jsPsych.run([
   familiaridad,
   motivos,
   postTarea,
-  crt,
   perfil,
   edad,
   guardando,
