@@ -236,7 +236,7 @@ const motivos = {
     questions: [{ prompt: "Cuando elegiste no ver la verificación, ¿por qué fue? Podés marcar más de una opción.",
       name: "motivos", required: true,
       options: ["Ya sabía si era cierto", "Confiaba en mi propio criterio", "No me interesaba el tema",
-        "La espera era demasiado larga", "Quería terminar rápido", "Otro motivo"] }],
+        "La espera era demasiado larga", "Otro motivo"] }],
     button_label: "Continuar",
     data: { fase: "post", paso: "motivos" },
   }],
@@ -271,7 +271,7 @@ const edad = {
 const perfil = {
   type: jsPsychSurveyMultiChoice,
   questions: [
-    { prompt: "Para mostrar que estás leyendo, elegí la opción «Bastante».", name: "atencion",
+    { prompt: "Para comprobar que estás leyendo la encuesta, elegí la opción «Bastante».", name: "atencion",
       options: ["Nada", "Poco", "Bastante", "Mucho"], required: true, horizontal: true },
     { prompt: "¿Con qué género te identificás?", name: "genero",
       options: ["Mujer", "Varón", "Otro", "Prefiero no decir"], required: true },
