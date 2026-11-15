@@ -10,7 +10,7 @@ const DATAPIPE_ID = "goC12oxVwkzh";
 
 // Segundos de espera para ver una verificación, por condición.
 // Con DataPipe, la condición se asigna de forma balanceada (configurar 2 condiciones en DataPipe).
-const COSTOS = [2, 15];
+const COSTOS = [5, 15];
 
 // Mail de contacto que aparece en el consentimiento y en el cierre.
 const CONTACTO = "maxigallego089@gmail.com";
@@ -21,8 +21,8 @@ const TITULARES = [
     texto: "Desde noviembre, el boleto mínimo de colectivo en las líneas porteñas pasa a $956",
     contexto: "Sube 3,9 %: la inflación de septiembre más 2 puntos." },
   { id: "t2", verdadero: true,  verosimil: true,
-    texto: "Las prepagas aumentan entre 1,4 % y 3,1 % en noviembre",
-    contexto: "Es el rango que aplica la mayoría de las empresas este mes." },
+    texto: "La Asignación Universal por Hijo aumenta 1,9 % en noviembre y llega a $159.610 por hijo",
+    contexto: "Es la actualización mensual por la inflación de septiembre." },
   { id: "t3", verdadero: true,  verosimil: false,
     texto: "La nafta súper en Argentina es más barata que en Chile, Perú y Uruguay",
     contexto: "En mayo costó US$ 1,54 por litro, contra US$ 1,78 en Chile, 1,75 en Perú y 2,20 en Uruguay. Solo Brasil era más barato." },
@@ -30,14 +30,14 @@ const TITULARES = [
     texto: "Milei propuso llevar la apertura de la economía argentina del 30 % al 90 %",
     contexto: "Habló del coeficiente de apertura comercial en la gala de Endeavor del 12 de noviembre." },
   { id: "t5", verdadero: false, verosimil: true,
-    texto: "El Gobierno otorgará en diciembre un “Bono Mujer” de $200.000 para mujeres de 18 a 65 años",
-    contexto: "No hay ningún anuncio oficial: es una cadena con un enlace de estafa." },
+    texto: "ARCA envía mails a contribuyentes con multas por documentos fiscales sin presentar",
+    contexto: "Son mails falsos que usan el nombre de ARCA para robar datos (phishing): no los envía el organismo." },
   { id: "t6", verdadero: false, verosimil: true,
     texto: "The Economist publicó una nota que llama a Milei “el líder más ignorante del mundo”",
     contexto: "La revista no publicó esa nota; la imagen salió de una cuenta de parodia." },
   { id: "t7", verdadero: false, verosimil: false,
-    texto: "Milei le dio al Reino Unido un ultimátum de 72 horas para retirar sus fuerzas de Malvinas",
-    contexto: "No existe ese comunicado: salió de una cuenta de parodia que imitaba al ministro de Defensa." },
+    texto: "Trump dejó de seguir a Milei en Instagram después de las elecciones de medio término",
+    contexto: "Trump sigue a muy pocas cuentas desde 2020 y Milei nunca estuvo entre ellas: no pudo dejar de seguirlo." },
   { id: "t8", verdadero: false, verosimil: false,
     texto: "El Banco Central lanzará un billete de $100.000 con la imagen de René Favaloro",
     contexto: "El Banco Central desmintió que vaya a emitir ese billete; no hay ningún anuncio oficial." },

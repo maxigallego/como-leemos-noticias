@@ -85,8 +85,8 @@ const instrucciones = {
       <li>Elegís si querés ver una <b>verificación</b> que te dice si es verdadero o falso.
           <span class="costo">Ver la verificación demora ${COSTO} segundos.</span></li>
     </ol>
-    <p>Al final te mostramos cuántos titulares acertaste: cuenta como acierto si verificaste,
-    o si no verificaste pero te inclinaste hacia la respuesta correcta («probablemente» o «seguro/a»). «No sé» no suma.</p>
+    <p>Al final te mostramos cuántos titulares acertaste con tu respuesta de 1 a 5, antes de verificar:
+    cuenta si te inclinaste hacia la respuesta correcta («probablemente» o «seguro/a»). «No sé» no suma.</p>
     <p>Primero hay un titular de práctica.</p>`,
   choices: ["Empezar la práctica"],
   data: { fase: "instrucciones" },
@@ -104,8 +104,14 @@ function secuenciaTitular(t, fase) {
     choices: ESCALA,
     css_classes: ["escala5"],
     data: { ...base, paso: "credibilidad" },
-    on_finish: (d) => { d.credibilidad = d.response + 1; d.credibilidad_texto = ESCALA[d.response]; },
+    on_finish: (d) => {
+      d.credibilidad = d.response + 1;
+      d.credibilidad_texto = ESCALA[d.response];
+      d.inclinacion = d.credibilidad >= 4 ? "verdadera" : d.credibilidad <= 2 ? "falsa" : "no_sabe";
+      d.acierto_previo = d.inclinacion === (t.verdadero ? "verdadera" : "falsa");
+    },
   };
+  const previo = () => jsPsych.data.get().filter({ titular: t.id, paso: "credibilidad", fase }).last(1).values()[0];
 
   const decision = {
     type: jsPsychHtmlButtonResponse,
@@ -150,31 +156,35 @@ function secuenciaTitular(t, fase) {
 
   const verifico = () => jsPsych.data.get().filter({ titular: t.id, paso: "decision", fase }).last(1).values()[0].verifico;
 
-  // Si verificó: ve el veredicto y sigue. Cuenta como acierto (pagó el costo de saberlo).
+  // Si verificó: ve el veredicto y si su respuesta previa acertó.
   const veredicto = {
     timeline: [{
       type: jsPsychHtmlButtonResponse,
-      stimulus: `${titularHTML(t)}
-        <p class="veredicto ${t.verdadero ? "v" : "f"}">Verificación: ${t.verdadero ? "VERDADERO" : "FALSO"}</p>
-        <p>${t.contexto}</p><p class="nota">Verificación del equipo de investigación.</p>`,
+      stimulus: () => {
+        const p = previo();
+        const fb = p.inclinacion === "no_sabe"
+          ? `Tu respuesta fue «No sé».`
+          : p.acierto_previo
+            ? `Tu respuesta fue «${p.credibilidad_texto}»: <b>acertaste</b>.`
+            : `Tu respuesta fue «${p.credibilidad_texto}»: <b>no acertaste</b>.`;
+        return `${titularHTML(t)}
+        <p class="veredicto ${t.verdadero ? "v" : "f"}">Era ${t.verdadero ? "VERDADERA" : "FALSA"}</p>
+        <p>${t.contexto}</p><p>${fb}</p><p class="nota">Verificación del equipo de investigación.</p>`;
+      },
       choices: ["Siguiente"],
       data: { ...base, paso: "juicio", verifico: true },
-      on_finish: (d) => { d.juicio_verdadera = t.verdadero; d.acierto = true; },
+      on_finish: (d) => { const p = previo(); d.inclinacion = p.inclinacion; d.acierto = p.acierto_previo; },
     }],
     conditional_function: () => verifico(),
   };
 
-  // Si no verificó: el juicio es el de la escala (1-3 = falsa, 5-7 = verdadera, 4 = no sabe). Sin pantalla.
+  // Si no verificó: se registra su respuesta previa, sin pantalla.
   const juicio = {
     timeline: [{
       type: jsPsychCallFunction,
-      func: () => {
-        const c = jsPsych.data.get().filter({ titular: t.id, paso: "credibilidad", fase }).last(1).values()[0].credibilidad;
-        const inclinacion = c >= 4 ? "verdadera" : c <= 2 ? "falsa" : "no_sabe";
-        return { inclinacion, acierto: inclinacion === (t.verdadero ? "verdadera" : "falsa") };
-      },
+      func: () => ({}),
       data: { ...base, paso: "juicio", verifico: false },
-      on_finish: (d) => { d.inclinacion = d.value.inclinacion; d.acierto = d.value.acierto; },
+      on_finish: (d) => { const p = previo(); d.inclinacion = p.inclinacion; d.acierto = p.acierto_previo; },
     }],
     conditional_function: () => !verifico(),
   };
@@ -188,7 +198,7 @@ function secuenciaTitular(t, fase) {
 const comprension = {
   type: jsPsychSurveyMultiChoice,
   questions: [{ prompt: "Antes de empezar: ¿cuánto demora ver una verificación?", name: "comprension",
-    options: ["2 segundos", "15 segundos", "No demora", "No sé"], required: true }],
+    options: [`${COSTOS[0]} segundos`, `${COSTOS[1]} segundos`, "No demora", "No sé"], required: true }],
   button_label: "Continuar",
   data: { fase: "comprension" },
   on_finish: (d) => { d.comprension_ok = d.response.comprension === `${COSTO} segundos`; },
@@ -315,9 +325,10 @@ const cierre = {
   stimulus: () => {
     const lista = TITULARES.map((t) => `<li>${t.texto}: <b>${t.verdadero ? "verdadero" : "falso"}</b></li>`).join("");
     return `<h2>Acertaste ${puntaje()} de 8 titulares</h2>
+      <p>Cuenta tu respuesta de 1 a 5, la que diste antes de decidir si verificabas.</p>
       <p>Estos eran los titulares:</p><ul>${lista}</ul>
       <p><b>De qué se trataba el estudio.</b> Estudiamos si el tiempo que lleva verificar cambia cuánto se verifica.
-      A la mitad de los participantes la verificación les demoró 2 segundos y a la otra mitad, 15.</p>
+      A la mitad de los participantes la verificación les demoró ${COSTOS[0]} segundos y a la otra mitad, ${COSTOS[1]}.</p>
       <p>Los titulares falsos fueron tomados de contenidos que el sitio de verificación Chequeado ya desmintió.
       Por favor, no los compartas como si fueran ciertos.</p>
       <p>¡Gracias por participar! Si tenés consultas, escribinos a ${CONTACTO}.</p>
